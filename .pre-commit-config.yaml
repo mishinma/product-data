@@ -1,0 +1,39 @@
+---
+default_language_version:
+  # Some hooks may require different versions of python (nbstriptout requires 3.10)
+  # default to python3 and let pre-commit decide
+  python: python3
+
+exclude: 'terraform|tutorials|ad-hoc|dataflow|examples|images|integrations/kevel|integrations/sistrix|integations/pg-logical-helper|integrations/gsheets|integrations/pglogical-helper|integrations/quinyx_import|integrations/dbt|integrations/fivetran|integrations/iterable-user-segments|integrations/snowcat-cloud|integrations/cloudsql-proxy-dbs|integrations/iterable|integrations/ssb|integrations/exchange-rates|services/growthbook'
+
+repos:
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: trailing-whitespace  # This hook trims trailing whitespace.
+  - id: check-added-large-files  # Prevent giant files from being committed.
+    args: ['--maxkb=3000', '--enforce-all']
+  - id: check-case-conflict  # Check for files with names that would conflict on a case-insensitive filesystem like MacOS HFS+ or Windows FAT.
+  - id: check-merge-conflict
+  - id: check-symlinks  # Checks for symlinks which do not point to anything.
+  - id: detect-private-key  # Checks for the existence of private keys.
+  - id: end-of-file-fixer  # Makes sure files end in a newline and only a newline.
+  - id: sort-simple-yaml
+  - id: check-vcs-permalinks
+  - id: file-contents-sorter
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.4.2
+  hooks:
+  - id: ruff
+    args: [--fix, --exit-non-zero-on-fix]
+  - id: ruff-format
+
+# - repo: https://github.com/adrienverge/yamllint
+#   rev: 'v1.35.1'
+#   hooks:
+#   - id: yamllint
+#     args:
+#     - '--config-file=.yamllint'
+

@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.12"
 requests = "^2.26.0"
 jsonschema = "^4.0.0"
+duckdb = "^1.1.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -16,7 +17,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 product-data = "product_data.main:main"
-
+ingest-data = "product_data.main:ingest_data"
+fetch-data = "product_data.main:fetch_data"
 
 # Config for your linting tools ruff and isort
 [tool.ruff]

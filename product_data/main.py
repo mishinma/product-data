@@ -194,14 +194,6 @@ def ingest_data(database_file=DATABASE_FILE, table_name=TABLE_NAME, file_path=PR
         conn.execute(insert_query)
         print("New records inserted into the main table.")
 
-        # # Describe the table
-        # table_info = conn.execute(f"DESCRIBE {table_name}").fetchall()
-        # print("Table schema:")
-        # header = [desc[0] for desc in conn.description]
-        # print(header)
-        # for row in table_info:
-        #     print(row)
-
         # Return the number of rows
         row_count = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()
         print(f"Number of rows: {row_count[0]}")

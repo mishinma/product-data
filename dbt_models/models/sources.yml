@@ -1,0 +1,38 @@
+version: 2
+
+sources:
+  - name: raw
+    database: products
+    schema: main
+    description: "Source schema containing raw product data loaded daily from the API."
+    tables:
+      - name: raw_products
+        description: "Table storing product data including pricing, category, and ratings."
+        columns:
+          - name: id
+            description: "Unique identifier for each product."
+            tests:
+              - not_null
+              - unique
+          - name: title
+            description: "Name or title of the product."
+            tests:
+              - not_null
+          - name: price
+            description: "Price of the product in currency."
+            tests:
+              - not_null  # ToDo: Add a test to check for positive values
+          - name: category
+            description: "Category of the product."
+          - name: description
+            description: "Detailed description of the product."
+          - name: image
+            description: "URL of the product image."
+          - name: rating_rate
+            description: "Average rating of the product (e.g., 4.5 stars)."
+          - name: rating_count
+            description: "Number of ratings submitted for the product."
+          - name: loaded_at
+            description: "Timestamp when the data was loaded into the source table."
+            tests:
+              - not_null

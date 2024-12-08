@@ -1,0 +1,16 @@
+name: 'dbt_models'
+version: '1.0.0'
+profile: 'duckdb'
+
+config-version: 2
+
+model-paths: ['models']
+
+models:
+  dbt_models:
+    staging:
+      materialized: view
+    intermediate:
+      materialized: table
+    forecast:
+      materialized: table

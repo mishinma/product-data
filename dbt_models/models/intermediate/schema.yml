@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: intm_product_status
+    description: "Tracks the status of each product based on recent data availability."
+    columns:
+      - name: product_id
+        description: "Unique identifier for each product."
+        tests:
+          - not_null
+      - name: title
+        description: "Name or title of the product."
+        tests:
+          - not_null
+      - name: status
+        description: "The status of the product. Can be 'active' or 'out_of_sale'."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['active', 'out_of_sale']

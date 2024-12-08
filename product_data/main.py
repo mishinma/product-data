@@ -14,6 +14,8 @@ LOCAL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 VALID_PRODUCTS_DIR = os.path.join(LOCAL_DIR, "valid")
 INVALID_PRODUCTS_DIR = os.path.join(LOCAL_DIR, "invalid")
 DATABASE_FILE = os.path.join(LOCAL_DIR, "products.duckdb")
+TABLE_NAME = "raw_products"
+TEMP_TABLE_NAME = "temp_" + TABLE_NAME
 
 # JSON Schema for validation
 PRODUCT_SCHEMA = {
@@ -33,7 +35,7 @@ PRODUCT_SCHEMA = {
 
 # Define the table schema as a static array
 TABLE_SCHEMA = [
-    {"name": "id", "type": "INTEGER", "constraints": "PRIMARY KEY"},
+    {"name": "id", "type": "INTEGER", "constraints": "NOT NULL"},
     {"name": "title", "type": "TEXT", "constraints": "NOT NULL"},
     {"name": "price", "type": "FLOAT", "constraints": "NOT NULL"},
     {"name": "category", "type": "TEXT", "constraints": ""},
@@ -42,10 +44,15 @@ TABLE_SCHEMA = [
     {"name": "rating_rate", "type": "FLOAT", "constraints": ""},
     {"name": "rating_count", "type": "INTEGER", "constraints": ""},
     {"name": "loaded_at", "type": "TIMESTAMP", "constraints": ""},
+    {"name": "_synched", "type": "TIMESTAMP", "constraints": "DEFAULT CURRENT_TIMESTAMP"},
 ]
+# Temp table schema is the same, but without the _synched column and with
+# PRIMARY KEY constraint on the id column
+TEMP_TABLE_SCHEMA = [column.copy() for column in TABLE_SCHEMA if column["name"] != "_synched"]
+TEMP_TABLE_SCHEMA[0]["constraints"] = "PRIMARY KEY"
 
 
-def generate_create_table_statement(table_name, schema):
+def generate_create_table_statement(table_name, schema, if_not_exists=True, temporary=False):
     """
     Generate a CREATE TABLE statement based on the provided schema.
     """
@@ -54,7 +61,11 @@ def generate_create_table_statement(table_name, schema):
         column_def = f"{column['name'].upper()} {column['type']} {column['constraints']}".strip()
         columns.append(column_def)
     columns_str = ",\n    ".join(columns)
-    return f"CREATE OR REPLACE TABLE {table_name} (\n    {columns_str}\n);"
+
+    if_not_exists_str = "IF NOT EXISTS" if if_not_exists else ""
+    temporary_str = "TEMP" if temporary else ""
+
+    return f"CREATE {temporary_str} TABLE {if_not_exists_str} {table_name} (\n    {columns_str}\n);"
 
 
 def get_column_order(schema):
@@ -88,10 +99,13 @@ def fetch_data():
     valid_records = []
     invalid_records = []
 
-    # TEST: Invalidate some records
+    # # TEST: Invalidate some records
     # products[0]["price"] = "invalid"
     # products[1]["rating"]["rate"] = "invalid"
     # products[2]["title"] = None
+    # # This will actually break ingestion as we have a primary key constraint
+    # # We can also check the records for duplicate IDs and move them to invalid
+    # # products[3]["id"] = 5
     # # These should be still valid
     # products[3]["rating"].pop("count")
     # products[4]["rating"].pop("rate")
@@ -111,7 +125,7 @@ def fetch_data():
             invalid_records.append(product)
 
     # Extract the column order
-    column_order = get_column_order(TABLE_SCHEMA)
+    column_order = get_column_order(TEMP_TABLE_SCHEMA)
 
     # Save valid records to CSV
     valid_csv_file = os.path.join(VALID_PRODUCTS_DIR, "products.csv")
@@ -143,17 +157,25 @@ def fetch_data():
 def ingest_data():
     # Connect to DuckDB and create a table
     with duckdb.connect(DATABASE_FILE) as conn:
-        create_table_query = generate_create_table_statement("products", TABLE_SCHEMA)
+        # Create the main table if it doesn't exist
+        create_table_query = generate_create_table_statement(TABLE_NAME, TABLE_SCHEMA, if_not_exists=True)
+        print(create_table_query)
         conn.execute(create_table_query)
 
-        # Load the data into DuckDB
+        # Create a temp table
+        create_temp_table_query = generate_create_table_statement(
+            TEMP_TABLE_NAME, TEMP_TABLE_SCHEMA, if_not_exists=False, temporary=True
+        )
+        conn.execute(create_temp_table_query)
+
+        # Load the data into the temp table in DuckDB
         file_path = os.path.join(VALID_PRODUCTS_DIR, "products.csv")
         if not os.path.exists(file_path):
             print(f"File not found: {file_path}")
             raise FileNotFoundError
 
         copy_query = f"""
-        COPY products FROM '{file_path}' (HEADER);
+        COPY {TEMP_TABLE_NAME} FROM '{file_path}' (HEADER);
         """
         try:
             res = conn.execute(copy_query)
@@ -164,8 +186,17 @@ def ingest_data():
         print("Data loaded into DuckDB.")
         print(f"Number of rows loaded: {rows_loaded}")
 
+        # Insert new records into the main table
+        insert_query = f"""
+            INSERT INTO {TABLE_NAME}
+            SELECT *, CURRENT_TIMESTAMP AS _synched
+            FROM {TEMP_TABLE_NAME};
+        """
+        conn.execute(insert_query)
+        print("New records inserted into the main table.")
+
         # Describe the table
-        table_info = conn.execute("DESCRIBE products").fetchall()
+        table_info = conn.execute("DESCRIBE raw_products").fetchall()
         print("Table schema:")
         header = [desc[0] for desc in conn.description]
         print(header)
@@ -173,14 +204,8 @@ def ingest_data():
             print(row)
 
         # Return the number of rows
-        row_count = conn.execute("SELECT COUNT(*) FROM products").fetchone()
+        row_count = conn.execute("SELECT COUNT(*) FROM raw_products").fetchone()
         print(f"Number of rows: {row_count[0]}")
-
-        # Verify the data was loaded
-        result = conn.execute("SELECT * FROM products LIMIT 1").fetchall()
-        print("Sample data from DuckDB:")
-        for row in result:
-            print(row)
 
 
 def main():

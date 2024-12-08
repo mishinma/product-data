@@ -14,10 +14,10 @@ DB_FILE = os.path.join(LOCAL_DIR, "sim", "products.duckdb")
 
 # Price adjustment rules
 CATEGORY_ADJUSTMENTS = {
-    "electronics": -0.1,  # Decrease by 10% over the year
-    "men's clothing": 0.1,  # Increase by 10% over the year
-    "women's clothing": 0.1,  # Increase by 10% over the year
-    "jewelry": 0.2,  # Increase by 1% over the year
+    "electronics": 0.1,  # Decrease by 10% over the year
+    "men's clothing": -0.1,  # Increase by 10% over the year
+    "women's clothing": -0.1,  # Increase by 10% over the year
+    "jewelry": -0.2,  # Increase by 20% over the year
 }
 
 

@@ -89,13 +89,13 @@ def fetch_data():
     invalid_records = []
 
     # TEST: Invalidate some records
-    products[0]["price"] = "invalid"
-    products[1]["rating"]["rate"] = "invalid"
-    products[2]["title"] = None
-    # These should be still valid
-    products[3]["rating"].pop("count")
-    products[4]["rating"].pop("rate")
-    products[5].pop("rating")
+    # products[0]["price"] = "invalid"
+    # products[1]["rating"]["rate"] = "invalid"
+    # products[2]["title"] = None
+    # # These should be still valid
+    # products[3]["rating"].pop("count")
+    # products[4]["rating"].pop("rate")
+    # products[5].pop("rating")
 
     # Validate each record against the schema
     for product in products:

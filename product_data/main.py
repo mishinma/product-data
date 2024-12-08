@@ -15,7 +15,7 @@ VALID_PRODUCTS_DIR = os.path.join(LOCAL_DIR, "valid")
 INVALID_PRODUCTS_DIR = os.path.join(LOCAL_DIR, "invalid")
 DATABASE_FILE = os.path.join(LOCAL_DIR, "products.duckdb")
 TABLE_NAME = "raw_products"
-TEMP_TABLE_NAME = "temp_" + TABLE_NAME
+PRODUCTS_FILE_PATH = os.path.join(VALID_PRODUCTS_DIR, "products.csv")
 
 # JSON Schema for validation
 PRODUCT_SCHEMA = {
@@ -154,28 +154,27 @@ def fetch_data():
         print(f"An error occurred while saving invalid data to JSON: {e}")
 
 
-def ingest_data():
+def ingest_data(database_file=DATABASE_FILE, table_name=TABLE_NAME, file_path=PRODUCTS_FILE_PATH):
     # Connect to DuckDB and create a table
-    with duckdb.connect(DATABASE_FILE) as conn:
+    with duckdb.connect(database_file) as conn:
         # Create the main table if it doesn't exist
-        create_table_query = generate_create_table_statement(TABLE_NAME, TABLE_SCHEMA, if_not_exists=True)
-        print(create_table_query)
+        create_table_query = generate_create_table_statement(table_name, TABLE_SCHEMA, if_not_exists=True)
         conn.execute(create_table_query)
 
+        temp_table_name = "temp_" + table_name
         # Create a temp table
         create_temp_table_query = generate_create_table_statement(
-            TEMP_TABLE_NAME, TEMP_TABLE_SCHEMA, if_not_exists=False, temporary=True
+            temp_table_name, TEMP_TABLE_SCHEMA, if_not_exists=False, temporary=True
         )
         conn.execute(create_temp_table_query)
 
         # Load the data into the temp table in DuckDB
-        file_path = os.path.join(VALID_PRODUCTS_DIR, "products.csv")
         if not os.path.exists(file_path):
             print(f"File not found: {file_path}")
             raise FileNotFoundError
 
         copy_query = f"""
-        COPY {TEMP_TABLE_NAME} FROM '{file_path}' (HEADER);
+        COPY {temp_table_name} FROM '{file_path}' (HEADER);
         """
         try:
             res = conn.execute(copy_query)
@@ -188,23 +187,23 @@ def ingest_data():
 
         # Insert new records into the main table
         insert_query = f"""
-            INSERT INTO {TABLE_NAME}
+            INSERT INTO {table_name}
             SELECT *, CURRENT_TIMESTAMP AS _synched
-            FROM {TEMP_TABLE_NAME};
+            FROM {temp_table_name};
         """
         conn.execute(insert_query)
         print("New records inserted into the main table.")
 
-        # Describe the table
-        table_info = conn.execute("DESCRIBE raw_products").fetchall()
-        print("Table schema:")
-        header = [desc[0] for desc in conn.description]
-        print(header)
-        for row in table_info:
-            print(row)
+        # # Describe the table
+        # table_info = conn.execute(f"DESCRIBE {table_name}").fetchall()
+        # print("Table schema:")
+        # header = [desc[0] for desc in conn.description]
+        # print(header)
+        # for row in table_info:
+        #     print(row)
 
         # Return the number of rows
-        row_count = conn.execute("SELECT COUNT(*) FROM raw_products").fetchone()
+        row_count = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()
         print(f"Number of rows: {row_count[0]}")
 
 

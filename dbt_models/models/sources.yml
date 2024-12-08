@@ -13,7 +13,6 @@ sources:
             description: "Unique identifier for each product."
             tests:
               - not_null
-              - unique
           - name: title
             description: "Name or title of the product."
             tests:

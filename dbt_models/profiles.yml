@@ -4,3 +4,6 @@ duckdb:
     dev:
       type: duckdb
       path: /Users/misha/dev/product-data/data/products.duckdb
+    devsim:
+      type: duckdb
+      path: /Users/misha/dev/product-data/data/sim/products.duckdb

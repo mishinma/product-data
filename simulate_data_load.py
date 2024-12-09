@@ -25,12 +25,14 @@ CATEGORY_ADJUSTMENTS = {
 
 
 # Adjust price based on category and day
-def adjust_price(base_price, category, day_of_year):
+def adjust_price(base_price, category, days_ago):
+    if days_ago == 0:
+        return base_price
     adjustment = CATEGORY_ADJUSTMENTS.get(category, 0)
     daily_adjustment = adjustment / 365
-    noise = random.uniform(-0.005, 0.005)  # Adding small random noise
-    adjusted_price = base_price * (1 + daily_adjustment * day_of_year + noise)
-    print(f"Adjusted price for {category} on day {day_of_year}: {adjusted_price}")
+    noise = random.uniform(-0.005, 0.005)
+    adjusted_price = base_price * (1 + daily_adjustment * days_ago + noise)
+    print(f"Adjusted price for {category} on day {days_ago}: {adjusted_price}")
     return round(adjusted_price, 2)
 
 
@@ -40,6 +42,10 @@ def main():
     for dir_path in [VALID_DATA_DIR, INVALID_DATA_DIR, DB_DIR]:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
+
+    # Drop the database if it exists
+    if os.path.exists(DB_FILE):
+        os.remove(DB_FILE)
 
     # Fetch data from the api
     fetch_data(valid_data_dir=VALID_DATA_DIR, invalid_data_dir=INVALID_DATA_DIR)
@@ -58,7 +64,7 @@ def main():
     today = datetime.now()
     for days_ago in range(365):
         current_date = (today - timedelta(days=days_ago)).strftime("%Y-%m-%d %H:%M:%S")
-        print(f"Processing data for {current_date}")
+        print(f"Processing data for {current_date}, {days_ago} days ago...")
         temp_csv = os.path.join(LOCAL_DIR, "sim_products.csv")
 
         # Adjust the data for the current day
@@ -73,6 +79,10 @@ def main():
 
         # Ingest data into DuckDB
         ingest_data(database_file=DB_FILE, file_path=temp_csv)
+
+    # remove the temporary file
+    os.remove(temp_csv)
+    print("Data simulation complete.")
 
 
 if __name__ == "__main__":

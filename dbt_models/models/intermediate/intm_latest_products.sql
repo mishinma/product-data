@@ -50,3 +50,4 @@ last_products_status as (
 SELECT
     *
 FROM last_products_status
+ORDER BY product_id

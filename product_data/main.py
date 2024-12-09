@@ -37,11 +37,11 @@ PRODUCT_SCHEMA = {
 TABLE_SCHEMA = [
     {"name": "id", "type": "INTEGER", "constraints": "NOT NULL"},
     {"name": "title", "type": "TEXT", "constraints": "NOT NULL"},
-    {"name": "price", "type": "FLOAT", "constraints": "NOT NULL"},
+    {"name": "price", "type": "DECIMAL(10,2)", "constraints": "NOT NULL"},
     {"name": "category", "type": "TEXT", "constraints": ""},
     {"name": "description", "type": "TEXT", "constraints": ""},
     {"name": "image", "type": "TEXT", "constraints": ""},
-    {"name": "rating_rate", "type": "FLOAT", "constraints": ""},
+    {"name": "rating_rate", "type": "DECIMAL(5,2)", "constraints": ""},
     {"name": "rating_count", "type": "INTEGER", "constraints": ""},
     {"name": "loaded_at", "type": "TIMESTAMP", "constraints": ""},
     {"name": "_synched", "type": "TIMESTAMP", "constraints": "DEFAULT CURRENT_TIMESTAMP"},

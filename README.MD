@@ -33,7 +33,7 @@ Run a prophet model (requires simulating historical data):
 poetry run forecast <product_id>
 ```
 
-Simulate historical data:
+Simulate ingesting historical data for the past year and run dbt:
 
 ```bash
 poetry run python simulate_data_load.py

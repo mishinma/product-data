@@ -1,3 +1,13 @@
+"""
+This module simulates a data ingestion process for product price adjustments over time,
+based on category-specific rules. It fetches product data, adjusts prices dynamically
+for a simulated past year, and stores the results in a DuckDB database.
+
+Usage:
+    Run this script to generate and ingest simulated product data for the past year,
+    adjusted dynamically based on predefined category rules.
+"""
+
 import csv
 import os
 import random

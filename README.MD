@@ -16,7 +16,8 @@ poetry install
 Load data from API:
 
 ```bash
-poetry run product_data
+poetry run fetch_data
+poetry run insert_data
 ```
 
 Transform data with dbt:

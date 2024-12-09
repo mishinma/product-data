@@ -3,13 +3,16 @@ import os
 import random
 from datetime import datetime, timedelta
 
-from product_data.main import ingest_data
+from product_data.main import fetch_data, ingest_data
 
 
 # File paths
 LOCAL_DIR = os.path.join(os.path.dirname(__file__), "data")
-INPUT_CSV = os.path.join(LOCAL_DIR, "products_fixture.csv")
-DB_FILE = os.path.join(LOCAL_DIR, "sim", "products.duckdb")
+VALID_DATA_DIR = os.path.join(LOCAL_DIR, "valid")
+INVALID_DATA_DIR = os.path.join(LOCAL_DIR, "invalid")
+INPUT_CSV = os.path.join(VALID_DATA_DIR, "products.csv")
+DB_DIR = os.path.join(LOCAL_DIR, "sim")
+DB_FILE = os.path.join(DB_DIR, "products.duckdb")
 
 
 # Price adjustment rules
@@ -33,7 +36,13 @@ def adjust_price(base_price, category, day_of_year):
 
 # Main script
 def main():
-    # Ensure the database file is created
+    # Create the data directories if they don't exist
+    for dir_path in [VALID_DATA_DIR, INVALID_DATA_DIR, DB_DIR]:
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+
+    # Fetch data from the api
+    fetch_data(valid_data_dir=VALID_DATA_DIR, invalid_data_dir=INVALID_DATA_DIR)
 
     # Read the base CSV file
     with open(INPUT_CSV) as file:
@@ -50,7 +59,7 @@ def main():
     for days_ago in range(365):
         current_date = (today - timedelta(days=days_ago)).strftime("%Y-%m-%d %H:%M:%S")
         print(f"Processing data for {current_date}")
-        temp_csv = os.path.join(LOCAL_DIR, "products.csv")
+        temp_csv = os.path.join(LOCAL_DIR, "sim_products.csv")
 
         # Adjust the data for the current day
         with open(temp_csv, "w", newline="") as temp_file:

@@ -75,7 +75,7 @@ def get_column_order(schema):
     return [column["name"] for column in schema]
 
 
-def fetch_data():
+def fetch_data(valid_data_dir=VALID_PRODUCTS_DIR, invalid_data_dir=INVALID_PRODUCTS_DIR):
     # Fetch data from the API
     response = requests.get(API_URL)
     if response.status_code == 200:
@@ -87,7 +87,7 @@ def fetch_data():
     print(f"Number of products fetched: {len(products)}")
 
     # Create local directories if they don't exist
-    for dir_path in [VALID_PRODUCTS_DIR, INVALID_PRODUCTS_DIR]:
+    for dir_path in [valid_data_dir, invalid_data_dir]:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
@@ -128,7 +128,7 @@ def fetch_data():
     column_order = get_column_order(TEMP_TABLE_SCHEMA)
 
     # Save valid records to CSV
-    valid_csv_file = os.path.join(VALID_PRODUCTS_DIR, "products.csv")
+    valid_csv_file = os.path.join(valid_data_dir, "products.csv")
     try:
         if valid_records:
             df_valid = pd.DataFrame(valid_records)
@@ -142,7 +142,7 @@ def fetch_data():
         print(f"An error occurred while saving valid data to CSV: {e}")
 
     # Save all invalid records into a single JSON file
-    invalid_file = os.path.join(INVALID_PRODUCTS_DIR, f"{timestamp_int}_products_invalid.json")
+    invalid_file = os.path.join(invalid_data_dir, f"{timestamp_int}_products_invalid.json")
     try:
         if invalid_records:
             with open(invalid_file, "w") as f:

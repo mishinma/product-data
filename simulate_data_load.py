@@ -27,10 +27,10 @@ DB_FILE = os.path.join(DB_DIR, "products.duckdb")
 
 # Price adjustment rules
 CATEGORY_ADJUSTMENTS = {
-    "electronics": 0.1,  # Decrease by 10% over the year
-    "men's clothing": -0.1,  # Increase by 10% over the year
-    "women's clothing": -0.1,  # Increase by 10% over the year
-    "jewelry": -0.2,  # Increase by 20% over the year
+    "electronics": -0.1,  # Decrease by 10% over the year
+    "men's clothing": 0.1,  # Increase by 10% over the year
+    "women's clothing": 0.1,  # Increase by 10% over the year
+    "jewelry": 0.2,  # Increase by 20% over the year
 }
 
 
@@ -38,7 +38,7 @@ CATEGORY_ADJUSTMENTS = {
 def adjust_price(base_price, category, days_ago):
     if days_ago == 0:
         return base_price
-    adjustment = CATEGORY_ADJUSTMENTS.get(category, 0)
+    adjustment = -1 * CATEGORY_ADJUSTMENTS.get(category, 0)
     daily_adjustment = adjustment / 365
     noise = random.uniform(-0.005, 0.005)
     adjusted_price = base_price * (1 + daily_adjustment * days_ago + noise)
